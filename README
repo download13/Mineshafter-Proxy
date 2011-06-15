@@ -1,0 +1,6 @@
+I know it's a little messy, but here's the run-down:
+Use Eclipse or your favorite IDE to edit the code.
+If your IDE doesn't compile the code for you then use javac to compile everything in the src directory.
+Run build_client.bat or build_server.bat depending on what you want to build.
+
+That's about all there is to it!
