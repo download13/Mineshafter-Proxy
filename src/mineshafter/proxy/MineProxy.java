@@ -9,10 +9,8 @@ import java.net.ResponseCache;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.security.KeyStore;
 import java.util.List;
 import java.util.Map;
-import javax.net.ssl.*;
 import com.sun.net.httpserver.*;
 
 import mineshafter.cache.SkinsResponseCache;
@@ -25,8 +23,9 @@ public class MineProxy
 	public static int port=0;
 	public static int httpport=0;
 	public static int httpsport=0;
-	public static String authServer=Resources.loadString("auth");
-	public static String skinServer="mineshafter-skins.appspot.com";
+	public static String authServer=Resources.loadString("servers").split("\n")[0].trim();
+	public static String skinServer=Resources.loadString("servers").split("\n")[1].trim();
+	public static String cloakServer=Resources.loadString("servers").split("\n")[2].trim();
 	public static URLRewriter[] rewriters=null;
 	
 	public static void listen(final int port,int httpport,int httpsport,float version) throws UnknownHostException, IOException
@@ -42,10 +41,11 @@ public class MineProxy
 			new URLRewriter("http://s3\\.amazonaws\\.com/MinecraftSkins/(.+?)\\.png",
 					"http://"+MineProxy.skinServer+"/skin/%s.png"),
 			new URLRewriter("http://s3\\.amazonaws\\.com/MinecraftCloaks/(.+?)\\.png",
-					"http://"+MineProxy.authServer+"/cloak/get.jsp?user=%s"),
+					"http://"+MineProxy.cloakServer+"/cloak/get.jsp?user=%s"),
 			new URLRewriter("http://www\\.minecraft\\.net/game/(.*)",
 					"http://"+MineProxy.authServer+"/game/%s"),
-			new URLRewriter("https://login\\.minecraft\\.net/","http://mineshafter.appspot.com/game/getversion.jsp")
+			new URLRewriter("http://session\\.minecraft\\.net/game/(.*)","http://"+MineProxy.authServer+"/game/%s"),
+			new URLRewriter("http://login\\.minecraft\\.net/","http://"+MineProxy.authServer+"/game/getversion.jsp")
 		};
 		MineProxy.version=version;
 		MineProxy.port=port;
@@ -54,24 +54,10 @@ public class MineProxy
 		
 		ResponseCache.setDefault(new SkinsResponseCache());
 		
-		KeyStore ks=KeyStore.getInstance("JKS");
-		char[] pass="password".toCharArray();
-		ks.load(Resources.load("keys.jks"),pass);
-		KeyManagerFactory kmf=KeyManagerFactory.getInstance("SunX509");
-		TrustManagerFactory tmf=TrustManagerFactory.getInstance("SunX509");
-		kmf.init(ks,pass);
-		tmf.init(ks);
-		SSLContext context=SSLContext.getInstance("TLS");
-		context.init(kmf.getKeyManagers(),tmf.getTrustManagers(),null);
 		HttpServer server=HttpServer.create(new InetSocketAddress(MineProxy.port),4);
 		server.createContext("/",new ProxyHandler());
 		server.setExecutor(null);
 		server.start();
-		HttpsServer sslserver=HttpsServer.create(new InetSocketAddress(MineProxy.httpsport),4);
-		sslserver.setHttpsConfigurator(new HttpsConfigurator(context));
-		sslserver.createContext("/",new ProxyHandler());
-		sslserver.setExecutor(null);
-		sslserver.start();
 		
 		/*
 		ServerSocketFactory ssf=ServerSocketFactory.getDefault();
@@ -125,7 +111,7 @@ public class MineProxy
 			}
 		}
 		//need to find a better way to do this
-		if(new URL(u).getPath().startsWith("/game/getversion.jsp"))
+		if(u.endsWith("/game/getversion.jsp"))
 		{
 			u+="?proxy="+Float.toString(MineProxy.version);
 		}
@@ -143,8 +129,8 @@ public class MineProxy
 			System.out.println("Request: "+method+" "+url+"\nWill go to "+murl);
 			URL urlm=new URL(murl);
 			String host=urlm.getHost();
-			String path=urlm.getPath();
-			if(urlm.getQuery()!=null) path+="?"+urlm.getQuery();
+			//String path=urlm.getPath();
+			//if(urlm.getQuery()!=null) path+="?"+urlm.getQuery();
 			boolean post=method.equalsIgnoreCase("POST");
 			
 			HttpURLConnection c=(HttpURLConnection)new URL(murl).openConnection(Proxy.NO_PROXY);
@@ -154,16 +140,23 @@ public class MineProxy
 			if(post) Streams.pipeStreams(t.getRequestBody(),c.getOutputStream());
 			this.transferHeaders(c,t);
 			int contentLength=c.getContentLength();
+			int responseCode=c.getResponseCode();
+			System.out.println("resp: "+responseCode+", len: "+contentLength);
 			if(contentLength==-1)
 			{
 				String encoding=c.getHeaderFields().get("Transfer-Encoding").get(0);
 				if(encoding.equalsIgnoreCase("chunked")) contentLength=0;
 			}
-			System.out.println("resp: "+c.getResponseCode()+", len: "+contentLength);
-			t.sendResponseHeaders(c.getResponseCode(),contentLength);
 			OutputStream out=t.getResponseBody();
-			Streams.pipeStreams(c.getInputStream(),out);
+			t.sendResponseHeaders(responseCode,contentLength);
+			if(contentLength>-1)
+			{
+				System.out.println(out);
+				Streams.pipeStreams(c.getInputStream(),out);
+			}
+			out.flush();
 			out.close();
+			t.close();
 			/*
 			if(method.equalsIgnoreCase("CONNECT"))
 			{
@@ -183,6 +176,7 @@ public class MineProxy
 			for(String h:headers.keySet())
 			{
 				if(h==null) continue;
+				System.out.println("Transferring header: "+h+" = "+headers.getFirst(h));
 				if(h.equalsIgnoreCase("host")) c.setRequestProperty(h,host);
 				else c.setRequestProperty(h,headers.getFirst(h));
 			}
@@ -194,6 +188,7 @@ public class MineProxy
 			for(String h:serverHeaders.keySet())
 			{
 				if(h==null) continue;
+				System.out.println("Transferring header back: "+h+" = "+serverHeaders.get(h).get(0));
 				clientHeaders.put(h,serverHeaders.get(h));
 			}
 		}

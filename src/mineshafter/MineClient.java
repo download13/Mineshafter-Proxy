@@ -25,7 +25,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet
 {
 	private static final long serialVersionUID=1L;
-	protected static float VERSION=2.6f;
+	protected static float VERSION=2.9f;
 	protected static int proxyPort=8061;
 	protected static int proxyHTTPPort=8062;
 	protected static int proxyHTTPSPort=8063;

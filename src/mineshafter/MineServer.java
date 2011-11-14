@@ -13,7 +13,7 @@ import mineshafter.util.SimpleRequest;
 
 public class MineServer
 {
-	protected static float VERSION=2.0f;
+	protected static float VERSION=2.1f;
 	protected static int proxyPort=8071;
 	protected static int proxyHTTPPort=8072;
 	protected static int proxyHTTPSPort=8073;

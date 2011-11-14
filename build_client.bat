@@ -1,5 +1,5 @@
-del Util.class AllowAll.class
+del Util.class
 del Mineshafter-proxy.jar
-javac Util.java AllowAll.java
-jar cfe Mineshafter-proxy.jar mineshafter.MineClient AllowAll.class Util.class manifest.txt keys.jks auth -C bin/ mineshafter/
+javac Util.java
+jar cfe Mineshafter-proxy.jar mineshafter.MineClient Util.class manifest.txt servers -C bin/ mineshafter/
 pause

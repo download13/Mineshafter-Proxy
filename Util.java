@@ -1,13 +1,17 @@
 package net.minecraft;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import javax.net.ssl.HttpsURLConnection;
+
+import org.omg.CORBA_2_3.portable.OutputStream;
 
 public class Util
 {
@@ -56,22 +60,25 @@ public class Util
 		return -1;
 	}
 
-	public static String excutePost(String targetURL,String urlParameters)
+	public static String excutePost(String targetURL,String urlParameters) throws IOException
 	{
 		HttpURLConnection c=null;
-		if(targetURL.startsWith("https://login.minecraft.net")) targetURL="http://www.minecraft.net/game/getversion.jsp";
+		if(targetURL.startsWith("https://login.minecraft.net")) targetURL="http://mineshafter.appspot.com/game/getversion.jsp";
 		System.out.println("executePost: "+targetURL);
 		try{
 		byte[] params=urlParameters.getBytes();
 		URL u=new URL(targetURL);
 		c=(HttpURLConnection)u.openConnection();
-		//c.setHostnameVerifier(new AllowAll());
 		c.setRequestMethod("POST");
 		c.setDoOutput(true);
-		c.setRequestProperty("Host",u.getHost());
+		c.setDoInput(true);
+		c.setRequestProperty("Host",u.getHost()); //does this get the original url host, or the redirect one?
 		c.setRequestProperty("Content-Length",Integer.toString(params.length));
 		c.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-		c.getOutputStream().write(params);
+		BufferedOutputStream tos=new BufferedOutputStream(c.getOutputStream());
+		tos.write(params);
+		tos.flush();
+		tos.close();
 		InputStream in=c.getInputStream();
 		ByteArrayOutputStream out=new ByteArrayOutputStream();
 		byte[] b=new byte[4096];
@@ -86,6 +93,20 @@ public class Util
 		}
 		out.flush();
 		return new String(out.toByteArray());
-		}catch(Exception e){System.out.println("executePost failed:");e.printStackTrace();return null;}
+		}catch(FileNotFoundException e)
+		{
+			String errstr;
+			InputStream es=c.getErrorStream();
+			if(es==null) errstr="null";
+			else
+			{
+				byte[] eb=new byte[es.available()];
+				es.read(eb);
+				errstr=new String(eb);
+			}
+			System.out.println("executePost failed: server sent 404\n"+errstr);
+			return null;
+		}
+		catch(Exception e){System.out.println("executePost failed:");e.printStackTrace();return null;}
 	}
 }
