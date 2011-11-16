@@ -1,0 +1,1 @@
+java -jar Mineshafter-proxy.jar

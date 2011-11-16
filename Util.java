@@ -63,8 +63,9 @@ public class Util
 	public static String excutePost(String targetURL,String urlParameters) throws IOException
 	{
 		HttpURLConnection c=null;
-		if(targetURL.startsWith("https://login.minecraft.net")) targetURL="http://mineshafter.appspot.com/game/getversion.jsp";
-		System.out.println("executePost: "+targetURL);
+		// TODO Maybe change this to only switch to the old login URL
+		if(targetURL.startsWith("https://login.minecraft.net")) targetURL = "http://session.minecraft.net/game/getversion.jsp";
+		System.out.println("executePost: " + targetURL);
 		try{
 		byte[] params=urlParameters.getBytes();
 		URL u=new URL(targetURL);
@@ -72,9 +73,11 @@ public class Util
 		c.setRequestMethod("POST");
 		c.setDoOutput(true);
 		c.setDoInput(true);
+		
 		c.setRequestProperty("Host",u.getHost()); //does this get the original url host, or the redirect one?
 		c.setRequestProperty("Content-Length",Integer.toString(params.length));
 		c.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+		
 		BufferedOutputStream tos=new BufferedOutputStream(c.getOutputStream());
 		tos.write(params);
 		tos.flush();

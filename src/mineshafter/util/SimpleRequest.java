@@ -28,7 +28,7 @@ public class SimpleRequest
 		ByteArrayOutputStream out=new ByteArrayOutputStream();
 		Streams.pipeStreams(in,out);
 		return out.toByteArray();
-		}catch(IOException e){return new byte[0];}
+		}catch(IOException e){return null;}
 	}
 	public static byte[] post(String url,byte[] data)
 	{
@@ -51,6 +51,6 @@ public class SimpleRequest
 		ByteArrayOutputStream returnStream=new ByteArrayOutputStream();
 		Streams.pipeStreams(in,returnStream);
 		return returnStream.toByteArray();
-		}catch(IOException e){return new byte[0];}
+		}catch(IOException e){return null;}
 	}
 }
