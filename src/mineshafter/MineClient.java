@@ -2,6 +2,7 @@ package mineshafter;
 
 import java.applet.Applet;
 import java.awt.Frame;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +32,8 @@ public class MineClient extends Applet {
 	protected static String launcherDownloadURL = "https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft.jar"; // "http://www.minecraft.net/download/minecraft.jar";
 	protected static String normalLauncherFilename = "minecraft.jar";
 	protected static String hackedLauncherFilename = "minecraft_modified.jar";
+	
+	protected static String MANIFEST_TEXT = "Manifest-Version: 1.2\nCreated-By: 1.6.0_22 (Sun Microsystems Inc.)\nMain-Class: net.minecraft.MinecraftLauncher\n";
 	
 	public void init() {
 		MineClient.main(new String[0]);
@@ -125,7 +128,7 @@ public class MineClient extends Applet {
 				n = entry.getName();
 				if(n.contains(".svn") || n.equals("META-INF/MOJANG_C.SF") || n.equals("META-INF/MOJANG_C.DSA") || n.equals("net/minecraft/minecraft.key") || n.equals("net/minecraft/Util$OS.class")) continue;
 				out.putNextEntry(entry);
-				if(n.equals("META-INF/MANIFEST.MF")) dataSource = Resources.load("manifest.txt");
+				if(n.equals("META-INF/MANIFEST.MF")) dataSource = new ByteArrayInputStream(MANIFEST_TEXT.getBytes());
 				else if(n.equals("net/minecraft/Util.class")) dataSource = Resources.load("Util.class");
 				else dataSource = in;
 				Streams.pipeStreams(dataSource, out);

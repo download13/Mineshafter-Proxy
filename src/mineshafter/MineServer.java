@@ -17,7 +17,7 @@ public class MineServer {
 	
 	public static void main(String[] args) {
 		try {
-			String verstring = new String(SimpleRequest.get(new URL("http://mineshafter.appspot.com/update?name=server")));
+			String verstring = new String(SimpleRequest.get("http://mineshafter.appspot.com/update?name=server"));
 			if(verstring.isEmpty()) verstring = "0";
 			float version;
 			try {
@@ -46,6 +46,7 @@ public class MineServer {
 			System.setProperty("http.proxyPort", Integer.toString(MineServer.proxyPort));
 			System.setProperty("https.proxyHost", "127.0.0.1");
 			System.setProperty("https.proxyPort", Integer.toString(MineServer.proxyPort));
+			
 			String load;
 			try {
 				load = args[0];
