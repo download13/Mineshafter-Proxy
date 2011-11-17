@@ -70,6 +70,10 @@ public class MineClient extends Applet {
 			System.setProperty("https.proxyHost", "127.0.0.1");
 			System.setProperty("https.proxyPort", Integer.toString(proxyPort));
 			
+			// Make sure we have a fresh launcher every time
+			File hackedFile = new File(hackedLauncherFilename);
+			if(hackedFile.exists()) hackedFile.delete();
+			
 			startLauncher();
 			
 		} catch(Exception e) {
