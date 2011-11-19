@@ -25,7 +25,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.0f;
+	protected static float VERSION = 3.1f;
 	protected static int proxyPort = 8061;
 	protected static int proxyHTTPPort = 8062;
 	
@@ -40,7 +40,7 @@ public class MineClient extends Applet {
 	}
 	
 	public static void main(String[] args) {
-		try{
+		try {
 			String verstring = new String(SimpleRequest.get("http://mineshafter.appspot.com/update?name=client"));
 			if(verstring.isEmpty()) verstring = "0";
 			float version;
@@ -58,10 +58,10 @@ public class MineClient extends Applet {
 		} catch(Exception e) {
 			System.out.println("Error while updating:");
 			e.printStackTrace();
-			System.exit(1);
+			// System.exit(1);
 		}
 		
-		try{
+		try {
 			MineProxy proxy = new MineProxy(proxyPort, VERSION);
 			proxy.start();
 			

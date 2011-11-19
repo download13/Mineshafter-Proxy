@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Hashtable;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 
-public class MineProxy extends Thread
-{
+public class MineProxy extends Thread {
 	public static String authServer = "mineshafter.appspot.com";
 	
 	public static Pattern SKIN_URL = Pattern.compile("http://s3\\.amazonaws\\.com/MinecraftSkins/(.+?)\\.png");
@@ -19,6 +19,11 @@ public class MineProxy extends Thread
 	// public static Pattern LOGIN_URL = Pattern.compile("login\\.minecraft\\.net/");
 	
 	public float version = 0;
+	
+	public long lastCountCheck = System.currentTimeMillis();
+	public int countSinceLastCheck = 0;
+	public boolean overCountReported = false;
+	public Vector<String> debuggingReport = new Vector<String>();
 	
 	public Hashtable<String, byte[]> skinCache;
 	public Hashtable<String, byte[]> cloakCache;

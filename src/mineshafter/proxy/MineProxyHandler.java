@@ -66,10 +66,12 @@ public class MineProxyHandler extends Thread {
 			
 		} catch(IOException e) {
 			System.out.println("Unable to read request");
+			this.proxy.debuggingReport.add("Unable to read request");
 			e.printStackTrace();
 			return;
 		}
 		System.out.println("Request: " + method + " " + url);
+		this.proxy.debuggingReport.add("Request: " + method + " " + url);
 		
 		// Read the incoming headers
 		//System.out.println("Headers:");
@@ -84,6 +86,7 @@ public class MineProxyHandler extends Thread {
 			} while(header.length() > 0);
 		} catch(IOException e) {
 			System.out.println("Unable to read headers");
+			this.proxy.debuggingReport.add("Unable to read headers");
 			e.printStackTrace();
 			return;
 		}
@@ -97,36 +100,76 @@ public class MineProxyHandler extends Thread {
 		byte[] data = null;
 		String params;
 		
+		// TODO write in rate-limiting somehow, and report high rate ones by saving the output and send it to a reporting service
 		if(skinMatcher.matches()) {
+			long current = System.currentTimeMillis();
+			if(current - this.proxy.lastCountCheck > 5000) { // If more than 5 seconds since last check
+				this.proxy.countSinceLastCheck = 0;
+				this.proxy.lastCountCheck = current;
+			} else {
+				this.proxy.countSinceLastCheck++;
+				if(this.proxy.countSinceLastCheck > 30 && !this.proxy.overCountReported) { // More than 30 checks in 5 seconds seems excessive
+					String report = "";
+					for(String i : this.proxy.debuggingReport) {
+						report += i + "\n";
+					}
+					
+					postRequest("http://mineshafter.appspot.com/report", report, "text/plain");
+					
+					this.proxy.overCountReported = true;
+				}
+			}
+			
 			System.out.println("Skin");
+			this.proxy.debuggingReport.add("Skin");
+			
 			String username = skinMatcher.group(1);
 			if(this.proxy.skinCache.containsKey(username)) { // Is the skin in the cache?
 				System.out.println("Skin from cache");
+				this.proxy.debuggingReport.add("Skin from cache");
+				
 				data = this.proxy.skinCache.get(username); // Then get it from there
 			} else {
 				url = "http://" + MineProxy.authServer + "/skin/" + username + ".png";
 				System.out.println("To: " + url);
+				this.proxy.debuggingReport.add("To: " + url);
+				
 				data = getRequest(url); // Then get it...
+				System.out.println("Response length: " + data.length);
+				this.proxy.debuggingReport.add("Response length: " + data.length);
+				
 				this.proxy.skinCache.put(username, data); // And put it in there
 			}
 			
 		} else if(cloakMatcher.matches()) {
 			System.out.println("Cloak");
+			this.proxy.debuggingReport.add("Cloak");
+			
 			String username = cloakMatcher.group(1);
 			if(this.proxy.cloakCache.containsKey(username)) {
 				System.out.println("Cloak from cache");
+				this.proxy.debuggingReport.add("Cloak from cache");
 				data = this.proxy.cloakCache.get(username);
 			} else {
 				url = "http://" + MineProxy.authServer + "/cloak/get.jsp?user=" + username;
 				System.out.println("To: " + url);
+				this.proxy.debuggingReport.add("To: " + url);
+				
 				data = getRequest(url);
+				System.out.println("Response length: " + data.length);
+				this.proxy.debuggingReport.add("Response length: " + data.length);
+				
 				this.proxy.cloakCache.put(username, data);
 			}
 			
 		} else if(getversionMatcher.matches()) {
 			System.out.println("GetVersion");
+			this.proxy.debuggingReport.add("GetVersion");
+			
 			url = "http://" + MineProxy.authServer + "/game/getversion.jsp?proxy=" + this.proxy.version;
 			System.out.println("To: " + url);
+			this.proxy.debuggingReport.add("To: " + url);
+			
 			try {
 				int postlen = Integer.parseInt(headers.get("content-length"));
 				char[] postdata = new char[postlen];
@@ -136,28 +179,41 @@ public class MineProxyHandler extends Thread {
 				
 			} catch(IOException e) {
 				System.out.println("Unable to read POST data from getversion request");
+				this.proxy.debuggingReport.add("Unable to read POST data from getversion request");
+				
 				e.printStackTrace();
 			}
 			
 		} else if(joinserverMatcher.matches()) {
 			System.out.println("JoinServer");
+			this.proxy.debuggingReport.add("JoinServer");
+			
 			params = joinserverMatcher.group(1);
 			url = "http://" + MineProxy.authServer + "/game/joinserver.jsp" + params;
 			System.out.println("To: " + url);
+			this.proxy.debuggingReport.add("To: " + url);
 			
 			data = getRequest(url);
 			
 		} else if(checkserverMatcher.matches()) {
 			System.out.println("CheckServer");
+			this.proxy.debuggingReport.add("CheckServer");
+			
 			params = checkserverMatcher.group(1);
 			url = "http://" + MineProxy.authServer + "/game/checkserver.jsp" + params;
 			System.out.println("To: " + url);
+			this.proxy.debuggingReport.add("To: " + url);
 			
 			data = getRequest(url);
 			
 		} else {
 			System.out.println("No handler. Piping.");
+			this.proxy.debuggingReport.add("No handler. Piping.");
+			
 			try {
+				if(!url.startsWith("http://") && !url.startsWith("https://")) {
+					url = "http://" + url;
+				}
 				URL u = new URL(url);
 				if(method.equals("CONNECT")) {
 					int port = u.getPort();
@@ -201,6 +257,7 @@ public class MineProxyHandler extends Thread {
 					this.toClient.close();
 					
 					System.out.println("Piping finished\n");
+					this.proxy.debuggingReport.add("Piping finished\n");
 					
 				} else if(method.equals("HEAD")) {
 					HttpURLConnection c = (HttpURLConnection) u.openConnection(Proxy.NO_PROXY);
@@ -227,6 +284,7 @@ public class MineProxyHandler extends Thread {
 					this.toClient.close();
 				} else {
 					System.out.println("UNEXPECTED REQUEST TYPE: " + method);
+					this.proxy.debuggingReport.add("UNEXPECTED REQUEST TYPE: " + method);
 				}
 				
 			} catch (Exception e) {
@@ -247,17 +305,24 @@ public class MineProxyHandler extends Thread {
 	public static byte[] getRequest(String url) {
 		try {
 			HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
+			int code = c.getResponseCode();
+			System.out.println("Response: " + code);
+			if(code / 100 == 4) {
+				return new byte[0];
+			}
 			BufferedInputStream in = new BufferedInputStream(c.getInputStream());
 			
-			byte[] data = grabData(in);
-			return data;
+			return grabData(in);
+			
 		} catch (MalformedURLException e) {
+			System.out.println("Bad URL in getRequest:");
 			e.printStackTrace();
 		} catch (IOException e) {
+			System.out.println("IO error during a getRequest:");
 			e.printStackTrace();
 		}
 		
-		return null;
+		return new byte[0];
 	}
 	
 	public static byte[] postRequest(String url, String postdata, String contentType) {
