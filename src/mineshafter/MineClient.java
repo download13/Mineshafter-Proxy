@@ -25,7 +25,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.1f;
+	protected static float VERSION = 3.2f;
 	protected static int proxyPort = 8061;
 	protected static int proxyHTTPPort = 8062;
 	
@@ -74,7 +74,7 @@ public class MineClient extends Applet {
 			File hackedFile = new File(hackedLauncherFilename);
 			if(hackedFile.exists()) hackedFile.delete();
 			
-			startLauncher();
+			startLauncher(args);
 			
 		} catch(Exception e) {
 			System.out.println("Something bad happened:");
@@ -83,7 +83,7 @@ public class MineClient extends Applet {
 		}
 	}
 	
-	public static void startLauncher()
+	public static void startLauncher(String[] args)
 	{
 		try {
 			if(new File(hackedLauncherFilename).exists()) {
@@ -93,12 +93,19 @@ public class MineClient extends Applet {
 				@SuppressWarnings("unchecked")
 				Class<Frame> launcherFrame = (Class<Frame>) cl.loadClass("net.minecraft.LauncherFrame");
 				
+				String[] nargs;
+				try {
+					nargs = new String[args.length - 1];
+					System.arraycopy(args, 1, nargs, 0, nargs.length); // Transfer the arguments from the process call so that the launcher gets them
+				} catch(Exception e) {
+					nargs = new String[0];
+				}
 				Method main = launcherFrame.getMethod("main", new Class[]{ String[].class });
-				main.invoke(launcherFrame, new Object[]{ new String[0] }); // TODO Put the args we received in here
+				main.invoke(launcherFrame, new Object[]{ nargs });
 				
 			} else if(new File(normalLauncherFilename).exists()) {
 				editLauncher();
-				startLauncher();
+				startLauncher(args);
 				
 			} else {
 				try{
@@ -107,7 +114,7 @@ public class MineClient extends Applet {
 					out.write(data);
 					out.flush();
 					out.close();
-					startLauncher();
+					startLauncher(args);
 					
 				} catch(Exception ex) {
 					System.out.println("Error downloading launcher:");
