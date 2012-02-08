@@ -143,7 +143,6 @@ public class MineProxyHandler extends Thread {
 				this.fromClient.read(postdata);
 				
 				data = postRequest(url, new String(postdata), "application/x-www-form-urlencoded");
-				
 			} catch(IOException e) {
 				System.out.println("Unable to read POST data from getversion request");
 				e.printStackTrace();
@@ -254,8 +253,11 @@ public class MineProxyHandler extends Thread {
 		}
 		
 		try {
-			this.toClient.writeBytes("HTTP/1.0 200 OK\r\nConnection: close\r\nProxy-Connection: close\r\nContent-Length: " + data.length + "\r\n\r\n");
-			this.toClient.write(data);
+			if(data != null) {
+				this.toClient.writeBytes("HTTP/1.0 200 OK\r\nConnection: close\r\nProxy-Connection: close\r\nContent-Length: " + data.length + "\r\n\r\n");
+				this.toClient.write(data);
+			}
+			this.toClient.close();
 			this.connection.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -324,7 +326,11 @@ public class MineProxyHandler extends Thread {
 			byte[] data = grabData(new BufferedInputStream(c.getInputStream()));
 			return data;
 			
+		} catch(java.net.UnknownHostException e) {
+			System.out.println("Unable to resolve remote host, returning null");
+			//e.printStackTrace();
 		} catch (MalformedURLException e) {
+			System.out.println("Bad URL when doing postRequest:");
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();

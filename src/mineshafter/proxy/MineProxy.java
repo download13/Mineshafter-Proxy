@@ -50,7 +50,8 @@ public class MineProxy extends Thread {
 				handler.start();
 			}
 		} catch(IOException e) {
-			// TODO What do I do here?
+			System.out.println("Error in server accept loop:");
+			e.printStackTrace();
 		}
 	}
 	
