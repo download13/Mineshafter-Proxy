@@ -26,6 +26,8 @@ public class MineProxyHandler extends Thread {
 	
 	private MineProxy proxy;
 	
+	private static String[] BLACKLISTED_HEADERS = new String[]{"Connection", "Proxy-Connection", "Transfer-Encoding"};
+	
 	public MineProxyHandler(MineProxy proxy, Socket conn) throws IOException {
 		this.setName("MineProxyHandler Thread");
 		
@@ -187,7 +189,7 @@ public class MineProxyHandler extends Thread {
 					c.setRequestMethod("GET");
 					
 					for(String k : headers.keySet()) {
-						c.setRequestProperty(k, headers.get(k));
+						c.setRequestProperty(k, headers.get(k)); // TODO Might need to blacklist these as well later
 					}
 					
 					//Collect the headers from the server and retransmit them
@@ -195,8 +197,14 @@ public class MineProxyHandler extends Thread {
 					res += "Connection: close\r\nProxy-Connection: close\r\n";
 					
 					java.util.Map<String, java.util.List<String>> h = c.getHeaderFields();
+					headerloop:
 					for(String k : h.keySet()) {
-						if(k == null || k.equalsIgnoreCase("Connection") || k.equalsIgnoreCase("Proxy-Connection")) continue;
+						if(k == null) continue;
+						k = k.trim();
+						for(String forbiddenHeader : BLACKLISTED_HEADERS) {
+							if(k.equalsIgnoreCase(forbiddenHeader)) continue headerloop;
+						}
+						
 						java.util.List<String> vals = h.get(k);
 						for(String v : vals) {
 							res += k + ": " + v + "\r\n";
@@ -204,7 +212,7 @@ public class MineProxyHandler extends Thread {
 					}
 					res += "\r\n";
 					
-					// System.out.println(res);
+					//System.out.println(res);
 					
 					this.toClient.writeBytes(res);
 					int size = Streams.pipeStreams(c.getInputStream(), this.toClient);
