@@ -13,7 +13,6 @@ import mineshafter.util.SimpleRequest;
 
 public class MineServer {
 	protected static float VERSION = 2.2f;
-	protected static int proxyPort = 8071;
 	
 	public static void main(String[] args) {
 		try {
@@ -39,13 +38,14 @@ public class MineServer {
 		}
 		
 		try {
-			MineProxy proxy = new MineProxy(proxyPort, VERSION);
+			MineProxy proxy = new MineProxy(VERSION);
 			proxy.start();
+			int proxyPort = proxy.getPort();
 			
 			System.setProperty("http.proxyHost", "127.0.0.1");
-			System.setProperty("http.proxyPort", Integer.toString(MineServer.proxyPort));
-			System.setProperty("https.proxyHost", "127.0.0.1");
-			System.setProperty("https.proxyPort", Integer.toString(MineServer.proxyPort));
+			System.setProperty("http.proxyPort", Integer.toString(proxyPort));
+			//System.setProperty("https.proxyHost", "127.0.0.1");
+			//System.setProperty("https.proxyPort", Integer.toString(proxyPort));
 			
 			String load;
 			try {

@@ -158,6 +158,7 @@ public class MineProxyHandler extends Thread {
 			System.out.println("To: " + url);
 			
 			data = getRequest(url);
+			System.out.println(data);
 			
 		} else if(checkserverMatcher.matches()) {
 			System.out.println("CheckServer");
@@ -167,6 +168,7 @@ public class MineProxyHandler extends Thread {
 			System.out.println("To: " + url);
 			
 			data = getRequest(url);
+			System.out.println(data);
 			
 		} else {
 			System.out.println("No handler. Piping.");

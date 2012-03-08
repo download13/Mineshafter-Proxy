@@ -25,9 +25,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.4f;
-	protected static int proxyPort = 8061;
-	protected static int proxyHTTPPort = 8062;
+	protected static float VERSION = 3.5f;
 	
 	protected static String launcherDownloadURL = "https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft.jar"; // "http://www.minecraft.net/download/minecraft.jar";
 	protected static String normalLauncherFilename = "minecraft.jar";
@@ -66,13 +64,14 @@ public class MineClient extends Applet {
 		}
 		
 		try {
-			MineProxy proxy = new MineProxy(proxyPort, VERSION);
+			MineProxy proxy = new MineProxy(VERSION);
 			proxy.start();
+			int proxyPort = proxy.getPort();
 			
 			System.setProperty("http.proxyHost", "127.0.0.1");
 			System.setProperty("http.proxyPort", Integer.toString(proxyPort));
-			System.setProperty("https.proxyHost", "127.0.0.1");
-			System.setProperty("https.proxyPort", Integer.toString(proxyPort));
+			//System.setProperty("https.proxyHost", "127.0.0.1");
+			//System.setProperty("https.proxyPort", Integer.toString(proxyPort));
 			
 			// Make sure we have a fresh launcher every time
 			File hackedFile = new File(hackedLauncherFilename);
@@ -87,8 +86,7 @@ public class MineClient extends Applet {
 		}
 	}
 	
-	public static void startLauncher(String[] args)
-	{
+	public static void startLauncher(String[] args) {
 		try {
 			if(new File(hackedLauncherFilename).exists()) {
 				URL u = new File(hackedLauncherFilename).toURI().toURL();
