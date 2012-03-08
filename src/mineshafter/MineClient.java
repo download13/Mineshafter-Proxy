@@ -17,6 +17,8 @@ import java.util.zip.ZipOutputStream;
 
 import javax.swing.JOptionPane;
 
+import sun.applet.Main;
+
 import mineshafter.proxy.MineProxy;
 import mineshafter.util.Resources;
 import mineshafter.util.SimpleRequest;
@@ -90,7 +92,7 @@ public class MineClient extends Applet {
 		try {
 			if(new File(hackedLauncherFilename).exists()) {
 				URL u = new File(hackedLauncherFilename).toURI().toURL();
-				URLClassLoader cl = new URLClassLoader(new URL[]{u});
+				URLClassLoader cl = new URLClassLoader(new URL[]{u}, Main.class.getClassLoader());
 				
 				@SuppressWarnings("unchecked")
 				Class<Frame> launcherFrame = (Class<Frame>) cl.loadClass("net.minecraft.LauncherFrame");

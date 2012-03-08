@@ -8,11 +8,13 @@ import java.lang.reflect.Method;
 import java.util.jar.Attributes;
 import javax.swing.JOptionPane;
 
+import sun.applet.Main;
+
 import mineshafter.proxy.MineProxy;
 import mineshafter.util.SimpleRequest;
 
 public class MineServer {
-	protected static float VERSION = 2.2f;
+	protected static float VERSION = 2.3f;
 	
 	public static void main(String[] args) {
 		try {
@@ -60,7 +62,7 @@ public class MineServer {
 			Class<?> cls = null;
 			Method main = null;
 			try {
-				cl = new URLClassLoader(new URL[]{ new File(load).toURI().toURL() });
+				cl = new URLClassLoader(new URL[]{ new File(load).toURI().toURL() }, Main.class.getClassLoader());
 				cls = cl.loadClass(name);
 				main = cls.getDeclaredMethod("main", new Class[]{ String[].class });
 			} catch(Exception e) {
