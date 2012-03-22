@@ -2,8 +2,8 @@ package mineshafter.proxy;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import mineshafter.util.Streams;
 
 public class MineProxyHandler extends Thread {
-	private BufferedInputStream fromClient;
+	private DataInputStream fromClient;
 	private DataOutputStream toClient;
 	private Socket connection;
 	
@@ -34,32 +34,31 @@ public class MineProxyHandler extends Thread {
 		this.proxy = proxy;
 		
 		connection = conn;
-		fromClient = new BufferedInputStream(conn.getInputStream());
+		fromClient = new DataInputStream(conn.getInputStream());
 		toClient = new DataOutputStream(conn.getOutputStream());
 	}
 	
 	public void run() {
 		HashMap<String, String> headers = new HashMap<String, String>();
-		String url = null;
-		String method = null;
 		
-		// Read the incoming request for the proxy
-		String[] requestLine = readLines(fromClient, 1)[0].split(" ");
-		method = requestLine[0].trim().toUpperCase();
-		url = requestLine[1].trim();
+		// Read the incoming request
+		String[] requestLine = readUntil(fromClient, '\n').split(" ");
+		String method = requestLine[0].trim().toUpperCase();
+		String url = requestLine[1].trim();
 		
 		System.out.println("Request: " + method + " " + url);
+		
 		// Read the incoming headers
 		//System.out.println("Headers:");
 		String header;
 		do {
-			header = readLines(fromClient, 1)[0].trim();
+			header = readUntil(fromClient, '\n').trim();
 			//System.out.println("H: " + header + ", " + header.length());
 			int splitPoint = header.indexOf(':');
-			if(splitPoint != -1) {
+			if (splitPoint != -1) {
 				headers.put(header.substring(0, splitPoint).toLowerCase().trim(), header.substring(splitPoint + 1).trim());
 			}
-		} while(header.length() > 0);
+		} while (header.length() > 0);
 		
 		Matcher skinMatcher = MineProxy.SKIN_URL.matcher(url);
 		Matcher cloakMatcher = MineProxy.CLOAK_URL.matcher(url);
@@ -256,17 +255,17 @@ public class MineProxyHandler extends Thread {
 			if (data != null) {
 				toClient.writeBytes("HTTP/1.0 200 OK\r\nConnection: close\r\nProxy-Connection: close\r\nContent-Length: " + data.length + "\r\n");
 				if (contentType != null) {
-					toClient.writeBytes("Content-Type: " + contentType);
+					toClient.writeBytes("Content-Type: " + contentType + "\r\n");
 				}
-				toClient.writeBytes("\r\n\r\n");
+				toClient.writeBytes("\r\n");
 				toClient.write(data);
 				toClient.flush();
 			}
 			fromClient.close();
 			toClient.close();
 			connection.close();
-			System.out.println(data.length);
-			System.out.println(new String(data));
+			//System.out.println(data.length);
+			//System.out.println(new String(data));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -364,23 +363,53 @@ public class MineProxyHandler extends Thread {
 		return out.toByteArray();
 	}
 	
-	public static String[] readLines(BufferedInputStream bis, int nlines) {
-		bis.mark(100000);
-		String[] lines = new String[nlines];
+	public static String readUntil(DataInputStream is, String endSequence) {
+		return readUntil(is, endSequence.getBytes());
+	}
+	
+	public static String readUntil(DataInputStream is, char endSequence) {
+		return readUntil(is, new byte[] {(byte) endSequence});
+	}
+	
+	public static String readUntil(DataInputStream is, byte endSequence) {
+		return readUntil(is, new byte[] {endSequence});
+	}
+	
+	public static String readUntil(DataInputStream is, byte[] endSequence) { // If there is an edge case, make sure we can see it
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		
+		String r = null;
 		
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(bis));
-			for (int i = 0; i < nlines; i++) {
-				lines[i] = reader.readLine();
-			}
-			bis.reset();
-			for (int i = 0; i < nlines; i++) {
-				while (bis.read() != '\n');
+			int i = 0;
+			while (true) {
+				boolean end = false;
+				byte b = is.readByte(); // Read a byte
+				if (b == endSequence[i]) { // If equal to current byte of endSequence
+					if (i == endSequence.length - 1) {
+						end = true; // If we hit the end of endSequence, we're done
+					}
+					i++; // Increment for next round
+				} else {
+					i = 0; // Reset
+				}
+				
+				out.write(b);
+				
+				if (end) break;
 			}
 		} catch (IOException ex) {
-			lines = new String[0];
+			System.out.println("readUntil unable to read from InputStream, endSeq: " + new String(endSequence));
+			ex.printStackTrace();
 		}
 		
-		return lines;
+		try {
+			r = out.toString("UTF-8");
+		} catch (java.io.UnsupportedEncodingException ex) {
+			System.out.println("readUntil unable to encode data: " + out.toString());
+			ex.printStackTrace();
+		}
+		
+		return r;
 	}
 }
