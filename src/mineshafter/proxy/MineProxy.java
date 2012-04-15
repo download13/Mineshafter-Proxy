@@ -2,6 +2,7 @@ package mineshafter.proxy;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Hashtable;
@@ -25,13 +26,13 @@ public class MineProxy extends Thread {
 	public Hashtable<String, byte[]> cloakCache;
 	
 	public MineProxy(float version) {
-		this.setName("MineProxy Thread");
+		setName("MineProxy Thread");
 		
 		try {
 			this.version = version;
 			
-			this.skinCache = new Hashtable<String, byte[]>();
-			this.cloakCache = new Hashtable<String, byte[]>();
+			skinCache = new Hashtable<String, byte[]>();
+			cloakCache = new Hashtable<String, byte[]>();
 		} catch(Exception e) {
 			System.out.println("Proxy starting error:");
 			e.printStackTrace();
@@ -41,11 +42,12 @@ public class MineProxy extends Thread {
 	public void run() {
 		try {
 			ServerSocket server = null;
-			int port = 9000; // A lot of other applications use the 80xx range, let's try for some less crowded real-estate
-			while(port < 12000) { // That should be enough
+			int port = 9010; // A lot of other applications use the 80xx range, let's try for some less crowded real-estate
+			while (port < 12000) { // That should be enough
 				try {
 					System.out.println("Trying to proxy on port " + port);
-					server = new ServerSocket(port);
+					byte[] loopback = {127, 0, 0, 1};
+					server = new ServerSocket(port, 16, InetAddress.getByAddress(loopback));
 					this.port = port;
 					System.out.println("Proxying successful");
 					break;
@@ -54,7 +56,7 @@ public class MineProxy extends Thread {
 				}
 			}
 			
-			while(true) {
+			while (true) {
 				Socket connection = server.accept();
 				
 				MineProxyHandler handler = new MineProxyHandler(this, connection);
@@ -67,7 +69,7 @@ public class MineProxy extends Thread {
 	}
 	
 	public int getPort() {
-		while(port < 0) {
+		while (port < 0) {
 			try {
 				sleep(50);
 			} catch (InterruptedException e) {

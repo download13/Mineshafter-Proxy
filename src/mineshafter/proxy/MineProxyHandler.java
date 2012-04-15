@@ -70,7 +70,7 @@ public class MineProxyHandler extends Thread {
 		String contentType = null;
 		String params;
 		
-		if(skinMatcher.matches()) {
+		if (skinMatcher.matches()) {
 			System.out.println("Skin");
 			
 			String username = skinMatcher.group(1);
@@ -88,7 +88,7 @@ public class MineProxyHandler extends Thread {
 				proxy.skinCache.put(username, data); // And put it in there
 			}
 			
-		} else if(cloakMatcher.matches()) {
+		} else if (cloakMatcher.matches()) {
 			System.out.println("Cloak");
 			
 			String username = cloakMatcher.group(1);
@@ -105,7 +105,7 @@ public class MineProxyHandler extends Thread {
 				proxy.cloakCache.put(username, data);
 			}
 			
-		} else if(getversionMatcher.matches()) {
+		} else if (getversionMatcher.matches()) {
 			System.out.println("GetVersion");
 			
 			url = "http://" + MineProxy.authServer + "/game/getversion.jsp?proxy=" + proxy.version;
@@ -125,7 +125,7 @@ public class MineProxyHandler extends Thread {
 				e.printStackTrace();
 			}
 			
-		} else if(joinserverMatcher.matches()) {
+		} else if (joinserverMatcher.matches()) {
 			System.out.println("JoinServer");
 			
 			params = joinserverMatcher.group(1);
@@ -136,7 +136,7 @@ public class MineProxyHandler extends Thread {
 			contentType = "text/plain";
 			// TODO There may be a bug here, keeps causing a hang in the MC thread that tries to read the data from it
 			
-		} else if(checkserverMatcher.matches()) {
+		} else if (checkserverMatcher.matches()) {
 			System.out.println("CheckServer");
 			
 			params = checkserverMatcher.group(1);
@@ -184,7 +184,8 @@ public class MineProxyHandler extends Thread {
 						os.write(postdata);
 					}
 					//Collect the headers from the server and retransmit them
-					String res = "HTTP/1.0 " + c.getResponseCode() + " " + c.getResponseMessage() + "\r\n";
+					int responseCode = c.getResponseCode();
+					String res = "HTTP/1.0 " + responseCode + " " + c.getResponseMessage() + "\r\n";
 					res += "Connection: close\r\nProxy-Connection: close\r\n";
 					
 					java.util.Map<String, java.util.List<String>> h = c.getHeaderFields();
@@ -205,8 +206,10 @@ public class MineProxyHandler extends Thread {
 					
 					//System.out.println(res);
 					
-					toClient.writeBytes(res);
-					int size = Streams.pipeStreams(c.getInputStream(), toClient);
+					if (responseCode / 100 != 5) {
+						toClient.writeBytes(res);
+						int size = Streams.pipeStreams(c.getInputStream(), toClient);
+					}
 					
 					toClient.close();
 					connection.close();

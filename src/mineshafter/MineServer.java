@@ -14,19 +14,19 @@ import mineshafter.proxy.MineProxy;
 import mineshafter.util.SimpleRequest;
 
 public class MineServer {
-	protected static float VERSION = 2.3f;
+	protected static float VERSION = 2.4f;
 	
 	public static void main(String[] args) {
 		try {
 			String verstring = new String(SimpleRequest.get("http://mineshafter.appspot.com/update?name=server"));
-			if(verstring.isEmpty()) verstring = "0";
+			if (verstring.isEmpty()) verstring = "0";
 			float version;
 			try {
 				version = Float.parseFloat(verstring);
 			} catch(Exception e) {
 				version = 0;
 			}
-			if(verstring == "") verstring = "0";
+			if (verstring == "") verstring = "0";
 			System.out.println("Current proxy version: " + VERSION);
 			System.out.println("Gotten proxy version: " + version);
 			if(VERSION < version) {
