@@ -97,13 +97,8 @@ public class MineClient extends Applet {
 				@SuppressWarnings("unchecked")
 				Class<Frame> launcherFrame = (Class<Frame>) cl.loadClass("net.minecraft.LauncherFrame");
 				
-				String[] nargs;
-				try {
-					nargs = new String[args.length - 1];
-					System.arraycopy(args, 1, nargs, 0, nargs.length); // Transfer the arguments from the process call so that the launcher gets them
-				} catch(Exception e) {
-					nargs = new String[0];
-				}
+				String[] nargs = new String[args.length];
+				System.arraycopy(args, 0, nargs, 0, args.length); // Transfer the arguments from the process call so that the launcher gets them
 				Method main = launcherFrame.getMethod("main", new Class[]{ String[].class });
 				main.invoke(launcherFrame, new Object[]{ nargs });
 				

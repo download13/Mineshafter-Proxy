@@ -14,6 +14,8 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.Socket;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 
@@ -188,7 +190,7 @@ public class MineProxyHandler extends Thread {
 					String res = "HTTP/1.0 " + responseCode + " " + c.getResponseMessage() + "\r\n";
 					res += "Connection: close\r\nProxy-Connection: close\r\n";
 					
-					java.util.Map<String, java.util.List<String>> h = c.getHeaderFields();
+					Map<String, List<String>> h = c.getHeaderFields();
 					headerloop:
 					for(String k : h.keySet()) {
 						if(k == null) continue;
@@ -197,7 +199,7 @@ public class MineProxyHandler extends Thread {
 							if(k.equalsIgnoreCase(forbiddenHeader)) continue headerloop;
 						}
 						
-						java.util.List<String> vals = h.get(k);
+						List<String> vals = h.get(k);
 						for(String v : vals) {
 							res += k + ": " + v + "\r\n";
 						}
@@ -205,10 +207,10 @@ public class MineProxyHandler extends Thread {
 					res += "\r\n";
 					
 					//System.out.println(res);
-					
+					int size = -1;
 					if (responseCode / 100 != 5) {
 						toClient.writeBytes(res);
-						int size = Streams.pipeStreams(c.getInputStream(), toClient);
+						size = Streams.pipeStreams(c.getInputStream(), toClient);
 					}
 					
 					toClient.close();
