@@ -27,7 +27,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.5f;
+	protected static float VERSION = 3.6f;
 	
 	protected static String launcherDownloadURL = "https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft.jar"; // "http://www.minecraft.net/download/minecraft.jar";
 	protected static String normalLauncherFilename = "minecraft.jar";
