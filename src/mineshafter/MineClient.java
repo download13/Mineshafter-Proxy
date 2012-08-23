@@ -27,7 +27,7 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.6f;
+	protected static float VERSION = 3.7f;
 	
 	protected static String launcherDownloadURL = "https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft.jar"; // "http://www.minecraft.net/download/minecraft.jar";
 	protected static String normalLauncherFilename = "minecraft.jar";
@@ -70,10 +70,11 @@ public class MineClient extends Applet {
 			proxy.start();
 			int proxyPort = proxy.getPort();
 			
+			System.setErr(System.out);
+			
 			System.setProperty("http.proxyHost", "127.0.0.1");
 			System.setProperty("http.proxyPort", Integer.toString(proxyPort));
-			//System.setProperty("https.proxyHost", "127.0.0.1");
-			//System.setProperty("https.proxyPort", Integer.toString(proxyPort));
+			System.setProperty("java.net.preferIPv4Stack", "true");
 			
 			// Make sure we have a fresh launcher every time
 			File hackedFile = new File(hackedLauncherFilename);
@@ -136,10 +137,15 @@ public class MineClient extends Applet {
 			InputStream dataSource;
 			while((entry = in.getNextEntry()) != null) {
 				n = entry.getName();
-				if(n.contains(".svn") || n.equals("META-INF/MOJANG_C.SF") || n.equals("META-INF/MOJANG_C.DSA") || n.equals("net/minecraft/minecraft.key") || n.equals("net/minecraft/Util$OS.class")) continue;
+				if(n.contains(".svn")
+						|| n.equals("META-INF/MOJANG_C.SF")
+						|| n.equals("META-INF/MOJANG_C.DSA")
+						|| n.equals("net/minecraft/minecraft.key")
+						|| n.equals("net/minecraft/Util$OS.class")) continue;
+				
 				out.putNextEntry(entry);
 				if(n.equals("META-INF/MANIFEST.MF")) dataSource = new ByteArrayInputStream(MANIFEST_TEXT.getBytes());
-				else if(n.equals("net/minecraft/Util.class")) dataSource = Resources.load("Util.class");
+				else if(n.equals("net/minecraft/Util.class")) dataSource = Resources.load("net/minecraft/Util.class");
 				else dataSource = in;
 				Streams.pipeStreams(dataSource, out);
 				out.flush();

@@ -278,12 +278,14 @@ public class MineProxyHandler extends Thread {
 	
 	public static byte[] getRequest(String url) {
 		try {
-			HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
-			c.setInstanceFollowRedirects(false);
-			int code = c.getResponseCode();
+			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
+			conn.setInstanceFollowRedirects(false);
+			Map<String, List<String>> requestHeaders = conn.getRequestProperties();
+			int code = conn.getResponseCode();
+			
 			if(code == 301 || code == 302 || code == 303) {
 				System.out.println("Java didn't redirect automatically, going manual: " + Integer.toString(code));
-				String l = c.getHeaderField("location").trim();
+				String l = conn.getHeaderField("location").trim();
 				System.out.println("Manual redirection to: " + l);
 				return getRequest(l);
 			}
@@ -291,33 +293,33 @@ public class MineProxyHandler extends Thread {
 			System.out.println("Response: " + code);
 			if(code == 403) {
 				String s = "403 from req to " + url + "\nRequest headers:\n";
-				java.util.Map<String, java.util.List<String>> h = c.getRequestProperties();
-				for (String k : h.keySet()) {
+				
+				for (String k : requestHeaders.keySet()) {
 					if(k == null) continue;
-					java.util.List<String> vals = h.get(k);
+					java.util.List<String> vals = requestHeaders.get(k);
 					for(String v : vals) {
 						s += k + ": " + v + "\n";
 					}
 				}
 				
 				s += "Response headers:\n";
-				h = c.getHeaderFields();
-				for (String k : h.keySet()) {
+				Map<String, List<String>> responseHeaders = conn.getHeaderFields();
+				for (String k : responseHeaders.keySet()) {
 					if(k == null) continue;
-					java.util.List<String> vals = h.get(k);
+					java.util.List<String> vals = responseHeaders.get(k);
 					for(String v : vals) {
 						s += k + ": " + v + "\n";
 					}
 				}
 				
 				System.out.println(s);
-				System.out.println("Contents:\n" + new String(grabData(c.getErrorStream())));
+				System.out.println("Contents:\n" + new String(grabData(conn.getErrorStream())));
 			}
 			
 			if(code / 100 == 4) {
 				return new byte[0];
 			}
-			BufferedInputStream in = new BufferedInputStream(c.getInputStream());
+			BufferedInputStream in = new BufferedInputStream(conn.getInputStream());
 			return grabData(in);
 			
 		} catch (MalformedURLException e) {

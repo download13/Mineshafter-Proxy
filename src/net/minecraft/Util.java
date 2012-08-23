@@ -1,7 +1,6 @@
 package net.minecraft;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -12,9 +11,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
 import java.util.Map;
-import javax.net.ssl.HttpsURLConnection;
-
-import org.omg.CORBA_2_3.portable.OutputStream;
 
 public class Util {
 	private static File workDir=null;
@@ -60,7 +56,7 @@ public class Util {
 	public static String buildQuery(Map<String, Object> paramMap) {
 		StringBuilder localStringBuilder = new StringBuilder();
 		
-		for(Map.Entry localEntry : paramMap.entrySet()) {
+		for(Map.Entry<String, Object> localEntry : paramMap.entrySet()) {
 			if(localStringBuilder.length() > 0) {
 				localStringBuilder.append('&');
 			}
