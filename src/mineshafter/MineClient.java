@@ -41,7 +41,7 @@ public class MineClient extends Applet {
 	
 	public static void main(String[] args) {
 		try {
-			byte[] verdata = SimpleRequest.get("http://mineshafter.appspot.com/update?name=client");
+			byte[] verdata = SimpleRequest.get("http://mineshafter.appspot.com/update");
 			String verstring = new String();
 			if(verdata == null) verstring = "0";
 			else verstring = new String(verdata);
@@ -75,6 +75,7 @@ public class MineClient extends Applet {
 			System.setProperty("http.proxyHost", "127.0.0.1");
 			System.setProperty("http.proxyPort", Integer.toString(proxyPort));
 			System.setProperty("java.net.preferIPv4Stack", "true");
+			System.setProperty("minecraft.applet.WrapperClass", "mineshafter.MineClient");
 			
 			// Make sure we have a fresh launcher every time
 			File hackedFile = new File(hackedLauncherFilename);
@@ -130,8 +131,10 @@ public class MineClient extends Applet {
 	
 	public static void editLauncher() {
 		try {
+			File hackedFile = new File(System.getProperty("java.io.tmpdir"), hackedLauncherFilename);
+			System.out.println(hackedFile.toString());
 			ZipInputStream in = new ZipInputStream(new FileInputStream(normalLauncherFilename));
-			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(hackedLauncherFilename));
+			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(hackedFile));
 			ZipEntry entry;
 			String n;
 			InputStream dataSource;

@@ -66,7 +66,6 @@ public class MineProxyHandler extends Thread {
 		Matcher cloakMatcher = MineProxy.CLOAK_URL.matcher(url);
 		Matcher getversionMatcher = MineProxy.GETVERSION_URL.matcher(url);
 		Matcher joinserverMatcher = MineProxy.JOINSERVER_URL.matcher(url);
-		Matcher checkserverMatcher = MineProxy.CHECKSERVER_URL.matcher(url);
 		
 		byte[] data = null;
 		String contentType = null;
@@ -81,7 +80,7 @@ public class MineProxyHandler extends Thread {
 				
 				data = proxy.skinCache.get(username); // Then get it from there
 			} else {
-				url = "http://" + MineProxy.authServer + "/skin/" + username + ".png";
+				url = "http://" + MineProxy.authServer + "/mcapi/skin/" + username + ".png";
 				System.out.println("To: " + url);
 				
 				data = getRequest(url); // Then get it...
@@ -98,7 +97,7 @@ public class MineProxyHandler extends Thread {
 				System.out.println("Cloak from cache");
 				data = proxy.cloakCache.get(username);
 			} else {
-				url = "http://" + MineProxy.authServer + "/cloak/get.jsp?user=" + username;
+				url = "http://" + MineProxy.authServer + "/mcapi/cloak/" + username + ".png";
 				System.out.println("To: " + url);
 				
 				data = getRequest(url);
@@ -110,7 +109,7 @@ public class MineProxyHandler extends Thread {
 		} else if (getversionMatcher.matches()) {
 			System.out.println("GetVersion");
 			
-			url = "http://" + MineProxy.authServer + "/game/getversion.jsp?proxy=" + proxy.version;
+			url = "http://" + MineProxy.authServer + "/mcapi/getversion?proxy=" + proxy.version;
 			System.out.println("To: " + url);
 			
 			try {
@@ -137,15 +136,6 @@ public class MineProxyHandler extends Thread {
 			data = getRequest(url);
 			contentType = "text/plain";
 			// TODO There may be a bug here, keeps causing a hang in the MC thread that tries to read the data from it
-			
-		} else if (checkserverMatcher.matches()) {
-			System.out.println("CheckServer");
-			
-			params = checkserverMatcher.group(1);
-			url = "http://" + MineProxy.authServer + "/game/checkserver.jsp" + params;
-			System.out.println("To: " + url);
-			
-			data = getRequest(url);
 			
 		} else {
 			System.out.println("No handler. Piping.");
@@ -279,6 +269,7 @@ public class MineProxyHandler extends Thread {
 	public static byte[] getRequest(String url) {
 		try {
 			HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
+			conn.setUseCaches(false);
 			conn.setInstanceFollowRedirects(false);
 			Map<String, List<String>> requestHeaders = conn.getRequestProperties();
 			int code = conn.getResponseCode();
