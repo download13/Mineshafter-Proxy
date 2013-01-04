@@ -27,11 +27,11 @@ import mineshafter.util.Streams;
 public class MineClient extends Applet {
 	private static final long serialVersionUID = 1L;
 	
-	protected static float VERSION = 3.7f;
+	protected static float VERSION = 3.8f;
 	
 	protected static String launcherDownloadURL = "https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft.jar"; // "http://www.minecraft.net/download/minecraft.jar";
 	protected static String normalLauncherFilename = "minecraft.jar";
-	protected static String hackedLauncherFilename = "minecraft_modified.jar";
+	protected static File hackedFile = new File(System.getProperty("java.io.tmpdir"), "minecraft_modified.jar");
 	
 	protected static String MANIFEST_TEXT = "Manifest-Version: 1.2\nCreated-By: 1.6.0_22 (Sun Microsystems Inc.)\nMain-Class: net.minecraft.MinecraftLauncher\n";
 	
@@ -41,7 +41,7 @@ public class MineClient extends Applet {
 	
 	public static void main(String[] args) {
 		try {
-			byte[] verdata = SimpleRequest.get("http://mineshafter.appspot.com/update");
+			byte[] verdata = SimpleRequest.get("http://mineshafter.info/update");
 			String verstring = new String();
 			if(verdata == null) verstring = "0";
 			else verstring = new String(verdata);
@@ -78,7 +78,6 @@ public class MineClient extends Applet {
 			System.setProperty("minecraft.applet.WrapperClass", "mineshafter.MineClient");
 			
 			// Make sure we have a fresh launcher every time
-			File hackedFile = new File(hackedLauncherFilename);
 			if(hackedFile.exists()) hackedFile.delete();
 			
 			startLauncher(args);
@@ -92,8 +91,8 @@ public class MineClient extends Applet {
 	
 	public static void startLauncher(String[] args) {
 		try {
-			if(new File(hackedLauncherFilename).exists()) {
-				URL u = new File(hackedLauncherFilename).toURI().toURL();
+			if(hackedFile.exists()) {
+				URL u = hackedFile.toURI().toURL();
 				URLClassLoader cl = new URLClassLoader(new URL[]{u}, Main.class.getClassLoader());
 				
 				@SuppressWarnings("unchecked")
@@ -131,7 +130,6 @@ public class MineClient extends Applet {
 	
 	public static void editLauncher() {
 		try {
-			File hackedFile = new File(System.getProperty("java.io.tmpdir"), hackedLauncherFilename);
 			System.out.println(hackedFile.toString());
 			ZipInputStream in = new ZipInputStream(new FileInputStream(normalLauncherFilename));
 			ZipOutputStream out = new ZipOutputStream(new FileOutputStream(hackedFile));
