@@ -1,3 +1,5 @@
+## Deprecated. Use https://github.com/download13/Mineshafter-Launcher instead.
+
 The proxy for Mineshafter, both server and client code.
 If you want to make any modifications (custom server), just edit the `authServer`
 and the URL matching patterns in the `MineProxy` class.
